@@ -1,0 +1,46 @@
+// Mots doux : des lettres d'amour en ligne, une page par destinataire.
+//
+// Le propriétaire gère toutes les lettres depuis /admin et peut en « prêter »
+// une à un ami : celui-ci reçoit un lien secret (jetonEdition) pour écrire son
+// propre message, le prénom de sa copine et téléverser sa photo.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Neon passe par un pooler de connexions ; les migrations exigent une connexion directe.
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Declaration {
+  id           Int       @id @default(autoincrement())
+  // Adresse publique : /pour/<slug>
+  slug         String    @unique
+  // Prénom affiché dans la lettre (« Blanche, … »)
+  prenom       String
+  // Nom écrit sur l'enveloppe, facultatif (« Blanche Tchiengang »)
+  nomEnveloppe String?
+  // Signature du copain (« Kevin »), modifiable par l'administrateur
+  auteur       String?
+  message      String
+  question     String
+  // Clés des photos (5 au plus, la première en couverture) et de la vidéo dans Backblaze B2
+  photos       String[]  @default([])
+  videoCle     String?
+  theme        String    @default("rose")
+  active       Boolean   @default(true)
+  // Lettre affichée directement à la racine du site
+  accueil      Boolean   @default(false)
+  // Note interne : à qui la lettre est prêtée
+  ami          String?
+  jetonEdition String    @unique
+  // Suivi : la lettre a-t-elle été ouverte, la réponse a-t-elle été « oui » ?
+  ouvertures   Int       @default(0)
+  ouverteLe    DateTime?
+  repondueLe   DateTime?
+  creeLe       DateTime  @default(now())
+  majLe        DateTime  @updatedAt
+}

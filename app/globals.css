@@ -1,0 +1,121 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Thèmes de la lettre : couleurs du fond, de l'enveloppe, de la feuille et des cœurs. */
+.theme-rose {
+  --fond: #fff1f2;
+  --fond-2: #fbcfe8;
+  --sur-fond: #881337;
+  --enveloppe: #fde2e4;
+  --enveloppe-2: #fbd0d5;
+  --enveloppe-3: #f9bcc4;
+  --carte: #fffdfb;
+  --encre: #4a1d2c;
+  --doux: #9f4a63;
+  --accent: #e11d48;
+  --coeur: #fb7185;
+}
+.theme-rouge {
+  --fond: #3b0a10;
+  --fond-2: #8b1a26;
+  --sur-fond: #fff1e6;
+  --enveloppe: #fff4e8;
+  --enveloppe-2: #f6e3cf;
+  --enveloppe-3: #eed2b6;
+  --carte: #fffaf3;
+  --encre: #3d1410;
+  --doux: #8a3b2c;
+  --accent: #c81e3a;
+  --coeur: #ff8a9a;
+}
+.theme-nuit {
+  --fond: #0b1026;
+  --fond-2: #3b2a6b;
+  --sur-fond: #fdeef6;
+  --enveloppe: #f6ecfb;
+  --enveloppe-2: #e9d8f4;
+  --enveloppe-3: #dcc4ee;
+  --carte: #fdf8ff;
+  --encre: #2a1840;
+  --doux: #6d4f8f;
+  --accent: #d6336c;
+  --coeur: #f9a8d4;
+}
+
+.fond-lettre {
+  min-height: 100dvh;
+  color: var(--sur-fond);
+  background:
+    radial-gradient(circle at 20% 15%, rgb(255 255 255 / 0.18), transparent 40%),
+    radial-gradient(circle at 85% 80%, rgb(255 255 255 / 0.12), transparent 45%),
+    linear-gradient(160deg, var(--fond), var(--fond-2));
+}
+.theme-nuit.fond-lettre {
+  background:
+    radial-gradient(1px 1px at 12% 20%, #fff, transparent),
+    radial-gradient(1px 1px at 72% 12%, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 40% 70%, #fff, transparent),
+    radial-gradient(1px 1px at 88% 45%, #fff, transparent),
+    radial-gradient(1px 1px at 25% 88%, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 60% 35%, #fff, transparent),
+    linear-gradient(160deg, var(--fond), var(--fond-2));
+}
+
+/* Cœurs qui montent en fond de page */
+@keyframes monter {
+  0% { transform: translate3d(0, 0, 0) rotate(-10deg); opacity: 0; }
+  10% { opacity: var(--opacite); }
+  85% { opacity: var(--opacite); }
+  100% { transform: translate3d(var(--derive), -115vh, 0) rotate(20deg); opacity: 0; }
+}
+.coeur-flottant {
+  position: absolute;
+  bottom: -10vh;
+  color: var(--coeur);
+  animation: monter var(--duree) linear var(--delai) infinite;
+}
+
+@keyframes apparaitre {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+.apparaitre { animation: apparaitre 0.9s ease-out both; }
+
+@keyframes battre {
+  0%, 100% { transform: scale(1); }
+  14% { transform: scale(1.15); }
+  28% { transform: scale(1); }
+  42% { transform: scale(1.1); }
+}
+.battre { animation: battre 1.6s ease-in-out infinite; }
+
+/* Gerbe de cœurs au « oui » */
+@keyframes eclat {
+  0% { transform: translate(-50%, -50%) scale(0.3); opacity: 1; }
+  100% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1) rotate(var(--rot)); opacity: 0; }
+}
+.eclat {
+  position: fixed;
+  left: 50%;
+  top: 55%;
+  color: var(--coeur);
+  animation: eclat 1.8s cubic-bezier(0.15, 0.7, 0.3, 1) forwards;
+}
+
+/* Enveloppe : le rabat se replie vers le haut à l'ouverture */
+.rabat {
+  transform-box: fill-box;
+  transform-origin: top;
+  transition: transform 0.7s ease-in-out;
+}
+.ouverture .rabat { transform: scaleY(-1); }
+.ouverture .sceau { opacity: 0; transition: opacity 0.2s; }
+.enveloppe-scene { transition: transform 0.9s ease-in, opacity 0.9s ease-in; }
+.ouverture.enveloppe-scene { transform: translateY(30px) scale(0.92); opacity: 0; transition-delay: 0.35s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .coeur-flottant { display: none; }
+  .battre, .eclat { animation: none; }
+  .apparaitre { animation-duration: 0.01s; animation-delay: 0s !important; }
+}
