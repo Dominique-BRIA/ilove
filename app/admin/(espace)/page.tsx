@@ -3,9 +3,11 @@ import { ChevronRight, Film, Home, ImageOff, Images, PenLine, Plus, UserRound } 
 import Suivi from "@/components/Suivi";
 import { prisma } from "@/lib/db";
 import { lienSigne } from "@/lib/fichiers";
+import { comptesParLettre } from "@/lib/journal";
 
 export default async function TableauDeBord() {
   const lettres = await prisma.declaration.findMany({ orderBy: [{ accueil: "desc" }, { creeLe: "desc" }] });
+  const comptes = await comptesParLettre();
   const photos = await Promise.all(lettres.map((d) => lienSigne(d.photos[0] ?? null)));
 
   return (
@@ -62,7 +64,7 @@ export default async function TableauDeBord() {
                   {d.videoCle && <Film size={14} aria-label="Avec vidéo" />}
                 </p>
                 <div className="mt-2">
-                  <Suivi d={d} />
+                  <Suivi d={d} comptes={comptes.get(d.id)} />
                 </div>
               </div>
               <ChevronRight className="shrink-0 text-stone-400" />

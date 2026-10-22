@@ -10,9 +10,11 @@ import {
 } from "@/app/actions/admin";
 import { BoutonAction, BoutonCopier } from "@/components/Boutons";
 import FormulaireLettre from "@/components/FormulaireLettre";
+import Journal from "@/components/Journal";
 import Suivi from "@/components/Suivi";
 import { prisma } from "@/lib/db";
 import { mediasSignes } from "@/lib/fichiers";
+import { comptesParLettre } from "@/lib/journal";
 import { origine } from "@/lib/url";
 
 type Props = { params: Promise<{ id: string }>; searchParams: Promise<{ cree?: string }> };
@@ -38,6 +40,11 @@ export default async function DetailLettre({ params, searchParams }: Props) {
   if (!Number.isInteger(id)) notFound();
   const d = await prisma.declaration.findUnique({ where: { id } });
   if (!d) notFound();
+  const [evenements, total, comptes] = await Promise.all([
+    prisma.evenement.findMany({ where: { declarationId: id }, orderBy: { date: "desc" }, take: 200 }),
+    prisma.evenement.count({ where: { declarationId: id } }),
+    comptesParLettre(),
+  ]);
   const base = await origine();
   const { cree } = await searchParams;
 
@@ -48,7 +55,7 @@ export default async function DetailLettre({ params, searchParams }: Props) {
       </Link>
       <div className="mt-3 flex flex-wrap items-center gap-3">
         <h1 className="font-script text-4xl text-rose-900">{d.prenom}</h1>
-        <Suivi d={d} />
+        <Suivi d={d} comptes={comptes.get(d.id)} />
       </div>
 
       {cree && (
@@ -68,7 +75,7 @@ export default async function DetailLettre({ params, searchParams }: Props) {
         </BoutonAction>
         <BoutonAction
           action={reinitialiserSuivi.bind(null, d.id)}
-          confirmation="Remettre à zéro les ouvertures et la réponse ?"
+          confirmation="Effacer le journal (visites, ouvertures, réponses) de cette lettre ?"
         >
           <RotateCcw size={16} /> Remettre le suivi à zéro
         </BoutonAction>
@@ -86,6 +93,8 @@ export default async function DetailLettre({ params, searchParams }: Props) {
           <Trash2 size={16} /> Supprimer
         </BoutonAction>
       </div>
+
+      <Journal evenements={evenements} total={total} />
 
       <div className="mt-6 rounded-3xl bg-white p-5 shadow-sm sm:p-8">
         <FormulaireLettre

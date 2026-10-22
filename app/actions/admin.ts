@@ -101,9 +101,12 @@ export async function nouveauLienAmi(id: number) {
   rafraichir();
 }
 
-/** Remet le suivi à zéro, après ses propres essais et avant d'envoyer le lien. */
+/** Remet le suivi à zéro (journal compris), après ses propres essais et avant d'envoyer le lien. */
 export async function reinitialiserSuivi(id: number) {
   await exigerAdmin();
-  await prisma.declaration.update({ where: { id }, data: { ouvertures: 0, ouverteLe: null, repondueLe: null } });
+  await prisma.$transaction([
+    prisma.evenement.deleteMany({ where: { declarationId: id } }),
+    prisma.declaration.update({ where: { id }, data: { ouvertures: 0, ouverteLe: null, repondueLe: null } }),
+  ]);
   rafraichir();
 }

@@ -1,9 +1,18 @@
 import type { Declaration } from "@prisma/client";
 import { Eye, EyeOff, Heart, MailOpen, Mail } from "lucide-react";
 import { dateHeure } from "@/lib/format";
+import type { Comptes } from "@/lib/journal";
 
-/** Où en est la lettre : jamais ouverte, ouverte, ou « oui » reçu. */
-export default function Suivi({ d }: { d: Pick<Declaration, "active" | "ouvertures" | "ouverteLe" | "repondueLe"> }) {
+/** Où en est la lettre : visites, ouverture de l'enveloppe, « oui » reçus. */
+export default function Suivi({
+  d,
+  comptes = {},
+}: {
+  d: Pick<Declaration, "active" | "ouvertures" | "ouverteLe" | "repondueLe">;
+  comptes?: Comptes;
+}) {
+  const visites = comptes.VISITE ?? 0;
+  const ouis = comptes.OUI ?? 0;
   return (
     <div className="flex flex-wrap gap-2 text-xs font-medium">
       {!d.active && (
@@ -11,23 +20,25 @@ export default function Suivi({ d }: { d: Pick<Declaration, "active" | "ouvertur
           <EyeOff size={13} /> Hors ligne
         </span>
       )}
-      {d.repondueLe ? (
+      {d.repondueLe && (
         <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 px-2.5 py-1 text-rose-700">
           <Heart size={13} fill="currentColor" strokeWidth={0} /> A dit oui le {dateHeure(d.repondueLe)}
+          {ouis > 1 && <> · {ouis} fois</>}
         </span>
-      ) : null}
+      )}
       {d.ouverteLe ? (
         <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-emerald-700">
           <MailOpen size={13} /> Ouverte le {dateHeure(d.ouverteLe)}
-          {d.ouvertures > 1 && (
-            <>
-              <Eye size={13} className="ml-1" /> {d.ouvertures} fois
-            </>
-          )}
+          {d.ouvertures > 1 && <> · {d.ouvertures} fois</>}
         </span>
       ) : (
         <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-amber-700">
           <Mail size={13} /> Pas encore ouverte
+        </span>
+      )}
+      {visites > 0 && (
+        <span className="inline-flex items-center gap-1 rounded-full bg-sky-50 px-2.5 py-1 text-sky-700">
+          <Eye size={13} /> {visites} visite{visites > 1 ? "s" : ""}
         </span>
       )}
     </div>

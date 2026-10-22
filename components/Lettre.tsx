@@ -1,9 +1,9 @@
 "use client";
 
-import { useRef, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import dynamic from "next/dynamic";
 import { Clapperboard, Heart, HeartCrack, Images, Sparkles } from "lucide-react";
-import { noterOui, noterOuverture } from "@/app/actions/lettre";
+import { noterOui, noterOuverture, noterVisite } from "@/app/actions/lettre";
 import Carrousel3D from "./Carrousel3D";
 import Inclinable from "./Inclinable";
 
@@ -21,7 +21,7 @@ export interface LettreProps {
   /** Liens de lecture signés ; la première photo sert de couverture. */
   photos: string[];
   videoUrl: string | null;
-  /** Relecture par l'ami : ni l'ouverture ni la réponse ne sont enregistrées. */
+  /** Relecture par l'ami : ni la visite, ni l'ouverture, ni la réponse ne sont enregistrées. */
   apercu?: boolean;
 }
 
@@ -59,6 +59,15 @@ export default function Lettre(p: LettreProps) {
   const boutonNon = useRef<HTMLButtonElement>(null);
   const boutonOui = useRef<HTMLButtonElement>(null);
   const finLettre = useRef<HTMLDivElement>(null);
+  const visiteNotee = useRef(false);
+
+  // La visite est notée depuis le navigateur, pas au rendu serveur : l'aperçu de
+  // lien que WhatsApp ou Messenger fabriquent en recevant l'adresse ne compte pas.
+  useEffect(() => {
+    if (p.apercu || visiteNotee.current) return;
+    visiteNotee.current = true;
+    noterVisite(p.slug).catch(() => {});
+  }, [p.apercu, p.slug]);
 
   const paragraphes = p.message.split(/\n\s*\n/).map((t) => t.trim()).filter(Boolean);
   // Chaque paragraphe apparaît après le précédent, puis la signature, les souvenirs et la question.

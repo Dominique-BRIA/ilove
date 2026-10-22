@@ -43,4 +43,21 @@ model Declaration {
   repondueLe   DateTime?
   creeLe       DateTime  @default(now())
   majLe        DateTime  @updatedAt
+  evenements   Evenement[]
+}
+
+// Journal du suivi : une ligne à chaque visite, ouverture de l'enveloppe ou « oui ».
+model Evenement {
+  id            Int         @id @default(autoincrement())
+  declarationId Int
+  declaration   Declaration @relation(fields: [declarationId], references: [id], onDelete: Cascade)
+  // VISITE, OUVERTURE ou OUI
+  type          String
+  date          DateTime    @default(now())
+  // « iPhone · Safari », d'après le navigateur
+  appareil      String?
+  // « Douala, CM », d'après les en-têtes de géolocalisation de Vercel
+  lieu          String?
+
+  @@index([declarationId, date])
 }
