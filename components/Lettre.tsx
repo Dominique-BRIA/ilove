@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import dynamic from "next/dynamic";
-import { Clapperboard, Heart, HeartCrack, Images, Sparkles } from "lucide-react";
+import { Clapperboard, EyeOff, Heart, HeartCrack, Images, Sparkles } from "lucide-react";
 import { noterOui, noterOuverture, noterVisite } from "@/app/actions/lettre";
 import Carrousel3D from "./Carrousel3D";
 import Inclinable from "./Inclinable";
@@ -23,6 +23,8 @@ export interface LettreProps {
   videoUrl: string | null;
   /** Relecture par l'ami : ni la visite, ni l'ouverture, ni la réponse ne sont enregistrées. */
   apercu?: boolean;
+  /** Navigateur connecté à la plateforme de contrôle : rien n'est compté, et un bandeau le dit. */
+  admin?: boolean;
 }
 
 // Le bouton « Non » change d'avis à chaque tentative… et finit toujours par s'enfuir.
@@ -61,13 +63,17 @@ export default function Lettre(p: LettreProps) {
   const finLettre = useRef<HTMLDivElement>(null);
   const visiteNotee = useRef(false);
 
+  // Ne comptent ni la relecture de l'ami, ni l'administrateur, ni les navigateurs
+  // pilotés par des robots (captures d'écran des déploiements Vercel, par exemple).
+  const compter = () => !p.apercu && !p.admin && !navigator.webdriver;
+
   // La visite est notée depuis le navigateur, pas au rendu serveur : l'aperçu de
   // lien que WhatsApp ou Messenger fabriquent en recevant l'adresse ne compte pas.
   useEffect(() => {
-    if (p.apercu || visiteNotee.current) return;
+    if (visiteNotee.current || p.apercu || p.admin || navigator.webdriver) return;
     visiteNotee.current = true;
     noterVisite(p.slug).catch(() => {});
-  }, [p.apercu, p.slug]);
+  }, [p.apercu, p.admin, p.slug]);
 
   const paragraphes = p.message.split(/\n\s*\n/).map((t) => t.trim()).filter(Boolean);
   // Chaque paragraphe apparaît après le précédent, puis la signature, les souvenirs et la question.
@@ -79,7 +85,7 @@ export default function Lettre(p: LettreProps) {
   function ouvrir() {
     if (etape !== "enveloppe") return;
     setEtape("ouverture");
-    if (!p.apercu) noterOuverture(p.slug).catch(() => {});
+    if (compter()) noterOuverture(p.slug).catch(() => {});
     setTimeout(() => setEtape("lettre"), reduireAnimations() ? 0 : 1300);
   }
 
@@ -109,7 +115,7 @@ export default function Lettre(p: LettreProps) {
   function direOui() {
     if (oui) return;
     setOui(true);
-    if (!p.apercu) noterOui(p.slug).catch(() => {});
+    if (compter()) noterOui(p.slug).catch(() => {});
     if (!reduireAnimations()) {
       setEclats(
         Array.from({ length: 42 }, () => {
@@ -311,6 +317,12 @@ export default function Lettre(p: LettreProps) {
   return (
     <>
       <PluieDeCoeurs3D />
+      {(p.admin || p.apercu) && (
+        <p className="fixed inset-x-0 top-3 z-50 mx-auto flex w-fit max-w-[calc(100%-2rem)] items-center gap-2 rounded-full bg-stone-900/85 px-4 py-2 text-xs font-medium text-white shadow-lg backdrop-blur">
+          <EyeOff size={14} className="shrink-0" />
+          {p.admin ? "Mode admin : cette visite n'est pas comptée" : "Relecture : cette visite n'est pas comptée"}
+        </p>
+      )}
       {etape === "lettre" ? lettre : enveloppe}
     </>
   );

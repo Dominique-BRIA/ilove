@@ -1,4 +1,5 @@
 import type { Declaration } from "@prisma/client";
+import { estAdmin } from "@/lib/auth";
 import { estTheme } from "@/lib/declarations";
 import { mediasSignes } from "@/lib/fichiers";
 import Lettre from "./Lettre";
@@ -19,6 +20,7 @@ export default async function PageLettre({ d, apercu = false }: { d: Declaration
         photos={medias.photos.map((m) => m.url)}
         videoUrl={medias.video?.url ?? null}
         apercu={apercu}
+        admin={await estAdmin()}
       />
     </main>
   );

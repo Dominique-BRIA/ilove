@@ -3,7 +3,7 @@
 import { headers } from "next/headers";
 import { estAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { decrireAppareil, decrireLieu, type TypeEvenement } from "@/lib/journal";
+import { decrireAppareil, decrireLieu, estRobot, type TypeEvenement } from "@/lib/journal";
 
 // Suivi vu depuis la plateforme de contrôle : chaque visite, chaque ouverture de
 // l'enveloppe et chaque « oui » entrent dans le journal, avec leur date. Les
@@ -11,9 +11,10 @@ import { decrireAppareil, decrireLieu, type TypeEvenement } from "@/lib/journal"
 
 async function noter(slug: string, type: TypeEvenement): Promise<number | null> {
   if (await estAdmin()) return null;
+  const h = await headers();
+  if (estRobot(h.get("user-agent"))) return null;
   const d = await prisma.declaration.findFirst({ where: { slug, active: true }, select: { id: true } });
   if (!d) return null;
-  const h = await headers();
   await prisma.evenement.create({
     data: { declarationId: d.id, type, appareil: decrireAppareil(h.get("user-agent")), lieu: decrireLieu(h) },
   });

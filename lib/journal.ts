@@ -11,6 +11,11 @@ export const TYPES_EVENEMENT = {
 
 export type TypeEvenement = keyof typeof TYPES_EVENEMENT;
 
+/** Navigateurs sans personne derrière : captures des déploiements Vercel, robots d'indexation, tests automatisés. */
+export function estRobot(ua: string | null): boolean {
+  return !ua || /HeadlessChrome|bot\b|crawler|spider|vercel|Lighthouse|Puppeteer|Playwright/i.test(ua);
+}
+
 /** « iPhone · Safari », « Android · Chrome », « Windows · Edge »… */
 export function decrireAppareil(ua: string | null): string | null {
   if (!ua) return null;
